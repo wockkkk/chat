@@ -12,7 +12,10 @@ def get_message():
     while True:
         s.sendall(f'get_message|{message_index}'.encode())
         print(s.recv(1024).decode())
-        message_index += 1
+        if message_index < 50:
+            message_index += 1
+        else:
+            message_index = 50
 
 
 if account == 'n':
