@@ -1,11 +1,23 @@
+import sys
 from socket import *
 from threading import Thread
+from PyQt5 import QtWidgets
+
+
+def show(ui_class):
+    app = QtWidgets.QApplication(sys.argv)
+    main_window = QtWidgets.QMainWindow()
+    ui_class().setupUi(main_window)
+    main_window.show()
+    sys.exit(app.exec_())
+
 
 server_name = input('服务器IP?')
 s = socket()
 s.connect((server_name, 8080))
 account = input('有没有账号?(y,n)')
 message_index = 0
+
 
 def get_message():
     global message_index
@@ -35,5 +47,4 @@ else:
     exit()
 Thread(target=get_message).start()
 while True:
-    s.sendall(f'send_message|{input('输入信息')}|{account}'.encode())
-
+    s.sendall(f"send_message|{input('输入信息')}|{account}".encode())
