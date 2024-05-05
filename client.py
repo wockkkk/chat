@@ -2,7 +2,7 @@ import sys
 from socket import *
 from threading import Thread
 from PyQt5 import QtWidgets
-
+import main_ui, signon_ui
 
 def show(ui_class):
     app = QtWidgets.QApplication(sys.argv)
