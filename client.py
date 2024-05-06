@@ -1,8 +1,19 @@
 import sys
 from socket import *
-from threading import Thread
 from PyQt5 import QtWidgets
-import main_ui, signon_ui
+import main_ui
+import signin_ui
+import signon_ui
+import start_ui
+
+setdefaulttimeout(0.25)
+s = socket()
+ip = ''
+user = ''
+password = ''
+port = 8080
+account_id = 0
+
 
 def show(ui_class):
     app = QtWidgets.QApplication(sys.argv)
@@ -12,39 +23,66 @@ def show(ui_class):
     sys.exit(app.exec_())
 
 
-server_name = input('服务器IP?')
-s = socket()
-s.connect((server_name, 8080))
-account = input('有没有账号?(y,n)')
-message_index = 0
+class Signon(signon_ui.Ui_MainWindow):
+    def signon(self, MainWindow):
+        global ip, user, password, port, account_id, s
+        ip = self.lineEdit.text()
+        user = self.lineEdit_2.text()
+        password = self.lineEdit_3.text()
+        print(ip, user, password, port)
+        try:
+            s.connect((ip, port))
+            s.sendall(f'signon|{user}|{password}'.encode())
+            data = s.recv(1024).decode().split('|')
+            if data[0] == 'r':
+                account_id = int(data[1])
+                MainUi().setupUi(MainWindow)
+                MainWindow.show()
+            else:
+                self.user_wrong = QtWidgets.QMessageBox.warning(self.centralwidget, 'wrong user', 'wrong user')
+            print(ip, user, password, port, account_id)
+        except OSError:
+            self.error = QtWidgets.QMessageBox.critical(self.centralwidget, 'Error', 'Server not found')
+
+    def retranslateUi(self, MainWindow):
+        super().retranslateUi(MainWindow)
+        self.pushButton.clicked.connect(lambda: self.signon(MainWindow))
 
 
-def get_message():
-    global message_index
-    while True:
-        s.sendall(f'get_message|{message_index}'.encode())
-        print(s.recv(1024).decode())
-        if message_index <= 50:
-            message_index += 1
+class Start(start_ui.Ui_MainWindow):
+    def combo_box(self, MainWindow):
+        print(self.comboBox.currentIndex())
+        if self.comboBox.currentIndex() == 0:
+            Signon().setupUi(MainWindow)
+            MainWindow.show()
         else:
-            message_index = 0
+            signin_ui.Ui_MainWindow().setupUi(MainWindow)
+            MainWindow.show()
+
+    def retranslateUi(self, MainWindow):
+        super().retranslateUi(MainWindow)
+        self.pushButton.clicked.connect(lambda: self.combo_box(MainWindow))
+
+class MainUi(main_ui.Ui_MainWindow):
+    def signout(self, MainWindow):
+        global account_id, ip, user, password
+        account_id, ip, user, password = 0, '', '', ''
+        Start().setupUi(MainWindow)
+        MainWindow.show()
+
+    def send_message(self):
+        global s
+        if self.lineEdit.toPlainText()[0] == '/':
+            s.sendall(f'command|{self.lineEdit.toPlainText()[1:]}|{account_id}'.encode())
+        else:
+            s.sendall(f'send_message|{self.lineEdit.toPlainText()}|{account_id}'.encode())
+        self.lineEdit.clear()
+
+    def retranslateUi(self, MainWindow: QtWidgets.QMainWindow):
+        super().retranslateUi(MainWindow)
+        self.actionexit.triggered.connect(lambda: MainWindow.close())
+        self.actionsignout.triggered.connect(lambda: self.signout(MainWindow))
+        self.pushButton.clicked.connect(self.send_message)
 
 
-if account == 'n':
-    s.sendall(f"signin|{input('用户名?(不能有|)')}|{input('密码(不能有|)?')}".encode())
-    account = s.recv(1024).decode()
-elif account == 'y':
-    s.sendall(f"signon|{input('用户名?(不能有|)')}|{input('密码(不能有|)?')}".encode())
-    ohh = s.recv(1024).decode().split('|')
-    if ohh[0] == 'r':
-        account = ohh[1]
-    else:
-        print('6')
-        exit()
-
-else:
-    print('???')
-    exit()
-Thread(target=get_message).start()
-while True:
-    s.sendall(f"send_message|{input('输入信息')}|{account}".encode())
+show(Start)

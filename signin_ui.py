@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'signon_ui.ui'
+# Form implementation generated from reading ui file 'signin_ui.ui'
 #
 # Created by: PyQt5 UI code generator 5.15.9
 #
@@ -14,7 +14,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
-        MainWindow.resize(300, 175)
+        MainWindow.resize(300, 209)
         self.centralwidget = QtWidgets.QWidget(MainWindow)
         self.centralwidget.setObjectName("centralwidget")
         self.label = QtWidgets.QLabel(self.centralwidget)
@@ -38,25 +38,30 @@ class Ui_MainWindow(object):
         self.lineEdit_3.setEchoMode(QtWidgets.QLineEdit.Password)
         self.lineEdit_3.setObjectName("lineEdit_3")
         self.pushButton = QtWidgets.QPushButton(self.centralwidget)
-        self.pushButton.setGeometry(QtCore.QRect(220, 130, 75, 23))
+        self.pushButton.setGeometry(QtCore.QRect(220, 180, 75, 23))
         self.pushButton.setObjectName("pushButton")
         self.pushButton_2 = QtWidgets.QPushButton(self.centralwidget)
-        self.pushButton_2.setGeometry(QtCore.QRect(140, 130, 75, 23))
+        self.pushButton_2.setGeometry(QtCore.QRect(140, 180, 75, 23))
         self.pushButton_2.setObjectName("pushButton_2")
+        self.label_4 = QtWidgets.QLabel(self.centralwidget)
+        self.label_4.setGeometry(QtCore.QRect(50, 140, 54, 12))
+        self.label_4.setObjectName("label_4")
+        self.lineEdit_4 = QtWidgets.QLineEdit(self.centralwidget)
+        self.lineEdit_4.setGeometry(QtCore.QRect(130, 140, 113, 20))
+        self.lineEdit_4.setText("")
+        self.lineEdit_4.setEchoMode(QtWidgets.QLineEdit.Password)
+        self.lineEdit_4.setObjectName("lineEdit_4")
         MainWindow.setCentralWidget(self.centralwidget)
-        self.statusbar = QtWidgets.QStatusBar(MainWindow)
-        self.statusbar.setObjectName("statusbar")
-        MainWindow.setStatusBar(self.statusbar)
 
         self.retranslateUi(MainWindow)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
 
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
-        MainWindow.setWindowTitle(_translate("MainWindow", "signon"))
+        MainWindow.setWindowTitle(_translate("MainWindow", "signin"))
         self.label.setText(_translate("MainWindow", "ip"))
         self.label_2.setText(_translate("MainWindow", "用户名"))
         self.label_3.setText(_translate("MainWindow", "密码"))
-        self.lineEdit.setInputMask(_translate("MainWindow", "000.000.000.000;_"))
         self.pushButton.setText(_translate("MainWindow", "OK"))
         self.pushButton_2.setText(_translate("MainWindow", "Clean"))
+        self.label_4.setText(_translate("MainWindow", "重复密码"))
