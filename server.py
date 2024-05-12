@@ -11,11 +11,11 @@ close_server = False
 
 def server(client: socket):
     global close_server
-    r = ''
     spl = sqlite3.connect('user.sqlite')
     cur = spl.cursor()
     print('数据库加载完毕')
     while True:
+        r = ''
         data = client.recv(1024).decode().split('|')
         if data[0] == 'signin':
             cur.execute(f"""insert into user(name, password, permission_level) values ('{data[1]}','{data[2]}',0)""")
