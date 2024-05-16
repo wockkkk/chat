@@ -20,7 +20,7 @@ def server(client: socket):
         if data[0] == 'signin':
             cur.execute(f"""insert into user(name, password, permission_level) values ('{data[1]}','{data[2]}',0)""")
             spl.commit()
-            r = str(cur.execute(f"""select id from user where name = '{data[1]}'""").fetchall()[0][0])
+            r = 'r|'+str(cur.execute(f"""select id from user where name = '{data[1]}'""").fetchall()[0][0])
         elif data[0] == 'signon':
             try:
                 if data[2] == str(
@@ -35,12 +35,13 @@ def server(client: socket):
             if int(data[1]) == len(messages):
                 r = '|'
             else:
-                r = messages[int(data[1]) + 1]
+                r = messages[int(data[1])]
         elif data[0] == 'send_message':
             if len(messages) == 50:
                 messages.clear()
-            messages.append(
-                str(cur.execute(f"""select name from user where id = '{data[2]}'""").fetchall()) + ':' + data[1])
+            say = cur.execute(f"""select name from user where id = '{data[2]}'""").fetchall()
+            messages.append(str(say[0][0] + ':' + data[1]))
+            print(messages)
         elif data[0] == 'command':
             print(cur.execute(f"""select permission_level from user where id = {data[2]}""").fetchall())
             if data[1] == 'close':
@@ -49,9 +50,9 @@ def server(client: socket):
         elif data[0] == '':
             break
         print(data)
-        time.sleep(0.01)
-        print(r)
         client.sendall(r.encode())
+        print(r)
+
     client.close()
     cur.close()
     spl.close()
@@ -60,6 +61,7 @@ def server(client: socket):
 if __name__ == '__main__':
     s = socket()
     s.bind((gethostname(), 8080))
+    print(f'bind:{(gethostname(), 8080)}')
     s.listen(114)
     while True:
         client, addr = s.accept()

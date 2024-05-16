@@ -54,6 +54,37 @@ class Signon(signon_ui.Ui_MainWindow):
         self.pushButton.clicked.connect(lambda: self.signon(MainWindow))
 
 
+class Signin(signin_ui.Ui_MainWindow):
+    def signin(self, MainWindow):
+        global ip, user, password, port, account_id, s, connect
+        if self.lineEdit_3.text() == self.lineEdit_4.text():
+            ip = self.lineEdit.text()
+            user = self.lineEdit_2.text()
+            password = self.lineEdit_3.text()
+            print(ip, user, password, port)
+            try:
+                if not connect:
+                    s.connect((ip, port))
+                    connect = True
+                s.sendall(f'signin|{user}|{password}'.encode())
+                data = s.recv(1024).decode().split('|')
+                if data[0] == 'r':
+                    account_id = int(data[1])
+                    MainUi().setupUi(MainWindow)
+                    MainWindow.show()
+                else:
+                    self.user_wrong = QtWidgets.QMessageBox.warning(self.centralwidget, 'wrong user', 'wrong user')
+                print(ip, user, password, port, account_id)
+            except OSError:
+                self.error = QtWidgets.QMessageBox.critical(self.centralwidget, 'Error', 'Server not found')
+        else:
+                self.user_wrong = QtWidgets.QMessageBox.warning(self.centralwidget, 'wrong user', 'wrong user')
+
+    def retranslateUi(self, MainWindow):
+        super().retranslateUi(MainWindow)
+        self.pushButton.clicked.connect(lambda: self.signin(MainWindow))
+
+        
 class Start(start_ui.Ui_MainWindow):
     def setupUi(self, MainWindow: QtWidgets.QMainWindow):
         m = MainWindow.findChild(QtWidgets.QMenuBar, 'menubar')
@@ -67,7 +98,7 @@ class Start(start_ui.Ui_MainWindow):
             Signon().setupUi(MainWindow)
             MainWindow.show()
         else:
-            signin_ui.Ui_MainWindow().setupUi(MainWindow)
+            Signin().setupUi(MainWindow)
             MainWindow.show()
 
     def retranslateUi(self, MainWindow):
@@ -77,8 +108,8 @@ class Start(start_ui.Ui_MainWindow):
 
 class MainUi(main_ui.Ui_MainWindow):
     def signout(self, MainWindow):
-        global account_id, ip, user, password
-        account_id, ip, user, password = 0, '', '', ''
+        global account_id, ip, user, password, message_index
+        account_id, ip, user, password, message_index = 0, '', '', '', 0
         Start().setupUi(MainWindow)
         MainWindow.show()
 
@@ -97,7 +128,7 @@ class MainUi(main_ui.Ui_MainWindow):
         if data[0] == '':
             return
         else:
-            self.listWidget.addItem(data)
+            self.listWidget.addItem(data[0])
             message_index += 1
 
     def retranslateUi(self, MainWindow: QtWidgets.QMainWindow):
@@ -106,7 +137,8 @@ class MainUi(main_ui.Ui_MainWindow):
         self.actionsignout.triggered.connect(lambda: self.signout(MainWindow))
         self.pushButton.clicked.connect(self.send_message)
         self.timer = QTimer()
-        self.timer.singleShot(500, self.get_message)
+        self.timer.timeout.connect(self.get_message)
+        self.timer.start(250)
 
 
 show(Start)

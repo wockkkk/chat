@@ -63,7 +63,7 @@
      </rect>
     </property>
     <property name="inputMask">
-     <string>000.000.000.000;_</string>
+     <string/>
     </property>
    </widget>
    <widget class="QLineEdit" name="lineEdit_2">
