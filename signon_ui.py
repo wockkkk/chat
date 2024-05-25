@@ -44,6 +44,9 @@ class Ui_MainWindow(object):
         self.pushButton_2 = QtWidgets.QPushButton(self.centralwidget)
         self.pushButton_2.setGeometry(QtCore.QRect(140, 130, 75, 23))
         self.pushButton_2.setObjectName("pushButton_2")
+        self.checkBox = QtWidgets.QCheckBox(self.centralwidget)
+        self.checkBox.setGeometry(QtCore.QRect(250, 100, 51, 18))
+        self.checkBox.setObjectName("checkBox")
         MainWindow.setCentralWidget(self.centralwidget)
 
         self.retranslateUi(MainWindow)
@@ -57,3 +60,5 @@ class Ui_MainWindow(object):
         self.label_3.setText(_translate("MainWindow", "密码"))
         self.pushButton.setText(_translate("MainWindow", "OK"))
         self.pushButton_2.setText(_translate("MainWindow", "Clean"))
+        self.checkBox.setWhatsThis(_translate("MainWindow", "<html><head/><body><p><br/></p></body></html>"))
+        self.checkBox.setText(_translate("MainWindow", "show"))

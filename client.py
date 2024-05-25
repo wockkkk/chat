@@ -48,10 +48,23 @@ class Signon(signon_ui.Ui_MainWindow):
             print(ip, user, password, port, account_id)
         except OSError:
             self.error = QtWidgets.QMessageBox.critical(self.centralwidget, 'Error', 'Server not found')
+            connect = False
+
+    def st(self, MainWindow):
+        Start().setupUi(MainWindow)
+        MainWindow.show()
+
+    def show(self):
+        if self.checkBox.isChecked():
+            self.lineEdit_3.setEchoMode(QtWidgets.QLineEdit.Normal)
+        else:
+            self.lineEdit_3.setEchoMode(QtWidgets.QLineEdit.Password)
 
     def retranslateUi(self, MainWindow):
         super().retranslateUi(MainWindow)
         self.pushButton.clicked.connect(lambda: self.signon(MainWindow))
+        self.pushButton_2.clicked.connect(lambda: self.st(MainWindow))
+        self.checkBox.stateChanged.connect(self.show)
 
 
 class Signin(signin_ui.Ui_MainWindow):
@@ -72,19 +85,36 @@ class Signin(signin_ui.Ui_MainWindow):
                     account_id = int(data[1])
                     MainUi().setupUi(MainWindow)
                     MainWindow.show()
+                elif data[0] == 'name error':
+                    self.user_wrong = QtWidgets.QMessageBox.warning(self.centralwidget, 'wrong user', 'name error')
                 else:
                     self.user_wrong = QtWidgets.QMessageBox.warning(self.centralwidget, 'wrong user', 'wrong user')
                 print(ip, user, password, port, account_id)
             except OSError:
                 self.error = QtWidgets.QMessageBox.critical(self.centralwidget, 'Error', 'Server not found')
+                connect = False
         else:
-                self.user_wrong = QtWidgets.QMessageBox.warning(self.centralwidget, 'wrong user', 'wrong user')
+            self.user_wrong = QtWidgets.QMessageBox.warning(self.centralwidget, 'wrong user', 'wrong user')
+
+    def st(self, MainWindow):
+        Start().setupUi(MainWindow)
+        MainWindow.show()
+
+    def show(self):
+        if self.checkBox.isChecked():
+            self.lineEdit_3.setEchoMode(QtWidgets.QLineEdit.Normal)
+            self.lineEdit_4.setEchoMode(QtWidgets.QLineEdit.Normal)
+        else:
+            self.lineEdit_3.setEchoMode(QtWidgets.QLineEdit.Password)
+            self.lineEdit_4.setEchoMode(QtWidgets.QLineEdit.Password)
 
     def retranslateUi(self, MainWindow):
         super().retranslateUi(MainWindow)
         self.pushButton.clicked.connect(lambda: self.signin(MainWindow))
+        self.pushButton_2.clicked.connect(lambda: self.st(MainWindow))
+        self.checkBox.stateChanged.connect(self.show)
 
-        
+
 class Start(start_ui.Ui_MainWindow):
     def setupUi(self, MainWindow: QtWidgets.QMainWindow):
         m = MainWindow.findChild(QtWidgets.QMenuBar, 'menubar')
@@ -115,11 +145,14 @@ class MainUi(main_ui.Ui_MainWindow):
 
     def send_message(self):
         global s
-        if self.lineEdit.text()[0] == '/':
-            s.sendall(f'command|{self.lineEdit.text()[1:]}|{account_id}'.encode())
-        else:
-            s.sendall(f'send_message|{self.lineEdit.text()}|{account_id}'.encode())
-        self.lineEdit.clear()
+        try:
+            if self.lineEdit.text()[0] == '/':
+                s.sendall(f'command|{self.lineEdit.text()[1:]}|{account_id}'.encode())
+            else:
+                s.sendall(f'send_message|{self.lineEdit.text()}|{account_id}'.encode())
+            self.lineEdit.clear()
+        except IndexError:
+            pass
 
     def get_message(self):
         global s, message_index
@@ -131,6 +164,7 @@ class MainUi(main_ui.Ui_MainWindow):
             self.listWidget.addItem(data[0])
             message_index += 1
 
+    # noinspection PyUnresolvedReferences
     def retranslateUi(self, MainWindow: QtWidgets.QMainWindow):
         super().retranslateUi(MainWindow)
         self.actionexit.triggered.connect(lambda: MainWindow.close())

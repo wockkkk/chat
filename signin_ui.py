@@ -28,6 +28,7 @@ class Ui_MainWindow(object):
         self.label_3.setObjectName("label_3")
         self.lineEdit = QtWidgets.QLineEdit(self.centralwidget)
         self.lineEdit.setGeometry(QtCore.QRect(130, 20, 113, 20))
+        self.lineEdit.setInputMask("")
         self.lineEdit.setObjectName("lineEdit")
         self.lineEdit_2 = QtWidgets.QLineEdit(self.centralwidget)
         self.lineEdit_2.setGeometry(QtCore.QRect(130, 60, 113, 20))
@@ -51,6 +52,9 @@ class Ui_MainWindow(object):
         self.lineEdit_4.setText("")
         self.lineEdit_4.setEchoMode(QtWidgets.QLineEdit.Password)
         self.lineEdit_4.setObjectName("lineEdit_4")
+        self.checkBox = QtWidgets.QCheckBox(self.centralwidget)
+        self.checkBox.setGeometry(QtCore.QRect(250, 120, 51, 20))
+        self.checkBox.setObjectName("checkBox")
         MainWindow.setCentralWidget(self.centralwidget)
 
         self.retranslateUi(MainWindow)
@@ -65,3 +69,4 @@ class Ui_MainWindow(object):
         self.pushButton.setText(_translate("MainWindow", "OK"))
         self.pushButton_2.setText(_translate("MainWindow", "Clean"))
         self.label_4.setText(_translate("MainWindow", "重复密码"))
+        self.checkBox.setText(_translate("MainWindow", "show"))

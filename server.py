@@ -1,7 +1,6 @@
 import sqlite3
 from socket import *
 from threading import Thread
-import time
 
 messages = []
 print('Server is running...')
@@ -16,11 +15,15 @@ def server(client: socket):
     print('数据库加载完毕')
     while True:
         r = ''
+        if
         data = client.recv(1024).decode().split('|')
         if data[0] == 'signin':
-            cur.execute(f"""insert into user(name, password, permission_level) values ('{data[1]}','{data[2]}',0)""")
-            spl.commit()
-            r = 'r|'+str(cur.execute(f"""select id from user where name = '{data[1]}'""").fetchall()[0][0])
+            if not cur.execute(f"""select name from user where name = '{data[1]}'""").fetchall():
+                cur.execute(f"""insert into user(name, password, permission_level) values ('{data[1]}','{data[2]}',0)""")
+                spl.commit()
+                r = 'r|'+str(cur.execute(f"""select id from user where name = '{data[1]}'""").fetchall()[0][0])
+            else:
+                r = 'name error|'
         elif data[0] == 'signon':
             try:
                 if data[2] == str(
@@ -43,7 +46,7 @@ def server(client: socket):
             messages.append(str(say[0][0] + ':' + data[1]))
             print(messages)
         elif data[0] == 'command':
-            print(cur.execute(f"""select permission_level from user where id = {data[2]}""").fetchall())
+            print(cur.execute(f"""select permission_level from user where id = '{data[2]}'""").fetchall())
             if data[1] == 'close':
                 close_server = True
                 break
