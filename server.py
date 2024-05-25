@@ -15,7 +15,6 @@ def server(client: socket):
     print('数据库加载完毕')
     while True:
         r = ''
-        if
         data = client.recv(1024).decode().split('|')
         if data[0] == 'signin':
             if not cur.execute(f"""select name from user where name = '{data[1]}'""").fetchall():
