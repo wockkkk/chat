@@ -45,7 +45,12 @@ class Ui_MainWindow(object):
         self.pushButton_2.setGeometry(QtCore.QRect(140, 130, 75, 23))
         self.pushButton_2.setObjectName("pushButton_2")
         self.checkBox = QtWidgets.QCheckBox(self.centralwidget)
+        self.checkBox.setEnabled(True)
         self.checkBox.setGeometry(QtCore.QRect(250, 100, 51, 18))
+        self.checkBox.setTabletTracking(False)
+        self.checkBox.setFocusPolicy(QtCore.Qt.NoFocus)
+        self.checkBox.setAcceptDrops(False)
+        self.checkBox.setChecked(True)
         self.checkBox.setObjectName("checkBox")
         MainWindow.setCentralWidget(self.centralwidget)
 

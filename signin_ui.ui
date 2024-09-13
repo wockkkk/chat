@@ -159,6 +159,9 @@
     <property name="text">
      <string>show</string>
     </property>
+    <property name="checked">
+     <bool>true</bool>
+    </property>
    </widget>
   </widget>
  </widget>
