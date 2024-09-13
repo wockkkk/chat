@@ -50,7 +50,7 @@ class Ui_MainWindow(object):
         self.lineEdit_4 = QtWidgets.QLineEdit(self.centralwidget)
         self.lineEdit_4.setGeometry(QtCore.QRect(130, 140, 113, 20))
         self.lineEdit_4.setText("")
-        self.lineEdit_4.setEchoMode(QtWidgets.QLineEdit.Password)
+        self.lineEdit_4.setEchoMode(QtWidgets.QLineEdit.Normal)
         self.lineEdit_4.setObjectName("lineEdit_4")
         self.checkBox = QtWidgets.QCheckBox(self.centralwidget)
         self.checkBox.setGeometry(QtCore.QRect(250, 120, 51, 20))
