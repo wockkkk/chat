@@ -145,14 +145,13 @@ class MainUi(main_ui.Ui_MainWindow):
 
     def send_message(self):
         global s
-        try:
-            if self.lineEdit.text()[0] == '/':
-                s.sendall(f'command|{self.lineEdit.text()[1:]}|{account_id}'.encode())
-            else:
-                s.sendall(f'send_message|{self.lineEdit.text()}|{account_id}'.encode())
-            self.lineEdit.clear()
-        except IndexError:
-            pass
+        s.sendall(f'send_message|{self.textEdit.toPlainText()}|{account_id}'.encode())
+        self.textEdit.clear()
+
+    def send_command(self):
+        global s
+        s.sendall(f'command|{self.textEdit.toPlainText()}|{account_id}'.encode())
+        self.textEdit.clear()
 
     def get_message(self):
         global s, message_index
@@ -164,15 +163,29 @@ class MainUi(main_ui.Ui_MainWindow):
             self.listWidget.addItem(data[0])
             message_index += 1
 
-    # noinspection PyUnresolvedReferences
+    def check(self):
+        if self.comboBox.currentIndex() == 0:
+            try:
+                self.pushButton.clicked.disconnect()
+            except TypeError:
+                pass
+            self.pushButton.clicked.connect(self.send_message)
+        elif self.comboBox.currentIndex() == 1:
+            try:
+                self.pushButton.clicked.disconnect()
+            except TypeError:
+                pass
+            self.pushButton.clicked.connect(self.send_command)
+
     def retranslateUi(self, MainWindow: QtWidgets.QMainWindow):
         super().retranslateUi(MainWindow)
         self.actionexit.triggered.connect(lambda: MainWindow.close())
         self.actionsignout.triggered.connect(lambda: self.signout(MainWindow))
-        self.pushButton.clicked.connect(self.send_message)
         self.timer = QTimer()
         self.timer.timeout.connect(self.get_message)
-        self.timer.start(250)
+        self.timer.start(50)
+        self.comboBox.activated.connect(self.check)
+        self.check()
 
 
 show(Start)

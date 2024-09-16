@@ -36,7 +36,7 @@ class Ui_MainWindow(object):
         self.lineEdit_3 = QtWidgets.QLineEdit(self.centralwidget)
         self.lineEdit_3.setGeometry(QtCore.QRect(130, 100, 113, 20))
         self.lineEdit_3.setText("")
-        self.lineEdit_3.setEchoMode(QtWidgets.QLineEdit.Password)
+        self.lineEdit_3.setEchoMode(QtWidgets.QLineEdit.Normal)
         self.lineEdit_3.setObjectName("lineEdit_3")
         self.pushButton = QtWidgets.QPushButton(self.centralwidget)
         self.pushButton.setGeometry(QtCore.QRect(220, 180, 75, 23))

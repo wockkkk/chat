@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>804</width>
-    <height>596</height>
+    <width>802</width>
+    <height>694</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -20,35 +20,46 @@
       <x>0</x>
       <y>0</y>
       <width>801</width>
-      <height>501</height>
+      <height>441</height>
      </rect>
     </property>
    </widget>
-   <widget class="QLineEdit" name="lineEdit">
+   <widget class="QComboBox" name="comboBox">
     <property name="geometry">
      <rect>
       <x>0</x>
-      <y>510</y>
-      <width>711</width>
-      <height>41</height>
+      <y>440</y>
+      <width>121</width>
+      <height>22</height>
      </rect>
     </property>
-    <property name="inputMask">
-     <string/>
-    </property>
-    <property name="text">
-     <string/>
-    </property>
-    <property name="placeholderText">
-     <string>请开始你的表演</string>
+    <item>
+     <property name="text">
+      <string>发送文字</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>发送指令</string>
+     </property>
+    </item>
+   </widget>
+   <widget class="QTextEdit" name="textEdit">
+    <property name="geometry">
+     <rect>
+      <x>0</x>
+      <y>460</y>
+      <width>801</width>
+      <height>211</height>
+     </rect>
     </property>
    </widget>
    <widget class="QPushButton" name="pushButton">
     <property name="geometry">
      <rect>
-      <x>710</x>
-      <y>510</y>
-      <width>91</width>
+      <x>720</x>
+      <y>630</y>
+      <width>81</width>
       <height>41</height>
      </rect>
     </property>
@@ -62,7 +73,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>804</width>
+     <width>802</width>
      <height>23</height>
     </rect>
    </property>
