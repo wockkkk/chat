@@ -1,53 +1,51 @@
 import sqlite3
 from socket import *
 from threading import Thread
+import json
+from threading import Lock
 
 messages = []
+messages_lock = Lock()
 
-chats = 0
+online_users = {}  # 格式：{user_id: (name, permission_level)}
+online_users_lock = Lock()
+
+def recv_all(sock):
+    data = b""
+    while True:
+        chunk = sock.recv(4096)
+        if not chunk:
+            break
+        data += chunk
+        if len(chunk) < 4096:
+            break
+    return data
 
 
-def server(client: socket):
-    global chats
+def server(cli: socket):
+    global chats, online_users
     spl = sqlite3.connect('user.sqlite')
     cur = spl.cursor()
+    load = False
     print('数据库加载完毕')
     while True:
-        r = ''
+        r = []
         try:
-            data = client.recv(1024).decode().split('|')
+            data = json.loads(recv_all(cli).decode())
         except ConnectionResetError:
             break
-        if data[0] == 'signin':
-            if not cur.execute(f"""select name from user where name = '{data[1]}'""").fetchall():
-                cur.execute(
-                    f"""insert into user(name, password, permission_level) values ('{data[1]}','{data[2]}',0)""")
-                spl.commit()
-                r = 'r|' + str(cur.execute(f"""select id from user where name = '{data[1]}'""").fetchall()[0][0])
-            else:
-                r = 'name error|'
-        elif data[0] == 'signon':
-            try:
-                if data[2] == str(
-                        cur.execute(f"""select password from user where name = '{data[1]}'""").fetchall()[0][0]):
-                    r = ('r|' + str(
-                        cur.execute(f"""select id from user where name = '{data[1]}'""").fetchall()[0][0]))
-                else:
-                    r = 'fuck'
-            except IndexError:
-                r = 'fuck'
-        elif data[0] == 'get_message':
-            if int(data[1]) == len(messages):
-                r = '|'
-            else:
-                r = messages[int(data[1])]
+        if data[0] == 'get_message':
+            r = messages
+        elif data[0] == 'get_online_users':
+            with online_users_lock:
+                r = list(online_users.values())  # 返回格式：[('Alice', 1), ('Bob', 0)]
         elif data[0] == 'send_message':
             if cur.execute(f"""select silence from user where id = {data[2]}""").fetchall()[0][0] == 1:
                 continue
-            if len(messages) == 50:
-                messages.clear()
             say = cur.execute(f"""select name from user where id = '{data[2]}'""").fetchall()
-            messages.append(str(say[0][0] + ':' + data[1]))
+            new_message = [say[0][0], data[1]]
+            with messages_lock:
+                messages.append(new_message)
             print(messages)
         elif data[0] == 'command':
             if cur.execute(f"""select permission_level from user where id = '{data[2]}'""").fetchall()[0][0] >= 1:
@@ -67,14 +65,42 @@ def server(client: socket):
                         cur.execute(f"""update user set permission_level = {permission_level} where id = '{uid}'""")
                     if d[0] == 'ban':
                         cur.execute(f"""delete from user where name = '{d[1]}'""")
-
+        elif data[0] == 'signin':
+            if not cur.execute(f"""select name from user where name = '{data[1]}'""").fetchall():
+                cur.execute(
+                    f"""insert into user(name, password, permission_level) values ('{data[1]}','{data[2]}',0)""")
+                spl.commit()
+                r = ['r', str(cur.execute(f"""select id from user where name = '{data[1]}'""").fetchall()[0][0])]
+            else:
+                r = ['name error']
+        elif data[0] == 'signon':
+            try:
+                if data[2] == str(
+                        cur.execute(f"""select password from user where name = '{data[1]}'""").fetchall()[0][0]):
+                    r = ['r', str(
+                        cur.execute(f"""select id from user where name = '{data[1]}'""").fetchall()[0][0])]
+                else:
+                    r = []
+            except IndexError:
+                r = []
         elif data[0] == '':
             continue
+        if data[0] in ('signin', 'signon') and r[0] == 'r':
+            load = True
+            user_id = int(r[1])
+            user_name = cur.execute(f"select name from user where id={user_id}").fetchone()[0]
+            perm_level = cur.execute(f"select permission_level from user where id={user_id}").fetchone()[0]
+            with online_users_lock:
+                online_users[user_id] = (user_name, perm_level)
         print(data)
-        client.sendall(r.encode())
-        print(r)
-    chats -= 1
-    client.close()
+        cli.sendall(json.dumps(r).encode())
+        print(r, json.dumps(r).encode(), json.loads(json.dumps(r).encode()))
+    if load:
+        with online_users_lock:
+            # noinspection PyUnboundLocalVariable
+            if user_id in online_users:
+                del online_users[user_id]
+    cli.close()
     cur.close()
     spl.close()
 
@@ -90,4 +116,3 @@ if __name__ == '__main__':
         t = Thread(target=server, args=(client,))
         t.setDaemon(True)
         t.start()
-        chats += 1
