@@ -1,4 +1,5 @@
 import sys
+from threading import Lock
 from socket import *
 from PyQt5 import QtWidgets
 from PyQt5.QtCore import QTimer
@@ -7,20 +8,23 @@ import main_ui
 import signin_ui
 import signon_ui
 import start_ui
+import client_config
 import json
 
 from socket import gethostname
 
-setdefaulttimeout(20)
+setdefaulttimeout(client_config.time_out)
 s = socket()
+s_lock = Lock()
 ip = ''
 user = ''
 password = ''
-port = 8080
+port = client_config.POST
 account_id = 0
 connect = False
 message_index = 0
 localhost = ['localhost', '127.0.0.1']
+member_list = []
 
 
 def show(ui_class):
@@ -29,6 +33,18 @@ def show(ui_class):
     ui_class().setupUi(main_window)
     main_window.show()
     sys.exit(app.exec_())
+
+
+def recv_all(sock):
+    data = b""
+    while True:
+        chunk = sock.recv(4096)
+        if not chunk:
+            break
+        data += chunk
+        if len(chunk) < 4096:
+            break
+    return data
 
 
 class Signon(signon_ui.Ui_MainWindow):
@@ -42,16 +58,18 @@ class Signon(signon_ui.Ui_MainWindow):
         print(ip, user, password, port)
         try:
             if not connect:
-                s.connect((ip, port))
+                with s_lock:
+                    s.connect((ip, port))
                 connect = True
-            s.sendall(json.dumps(['signon', user, password]).encode())
-            data = json.loads(s.recv(1024))
+            with s_lock:
+                s.sendall(json.dumps(['signon', user, password]).encode())
+                data = json.loads(recv_all(s))
             if data[0] == 'r':
                 account_id = int(data[1])
                 MainUi().setupUi(main_window)
                 main_window.show()
             else:
-                QtWidgets.QMessageBox.warning(self.centralwidget, 'wrong user', 'wrong user')
+                QtWidgets.QMessageBox.warning(self.centralwidget, data[0], data[0])
             print(ip, user, password, port, account_id)
         except OSError:
             QtWidgets.QMessageBox.critical(self.centralwidget, 'Error', 'Server not found')
@@ -86,10 +104,12 @@ class Signin(signin_ui.Ui_MainWindow):
             print(ip, user, password, port)
             try:
                 if not connect:
-                    s.connect((ip, port))
+                    with s_lock:
+                        s.connect((ip, port))
                     connect = True
-                s.sendall(json.dumps(['signin', user, password]).encode())
-                data = json.loads(s.recv(1024))
+                with s_lock:
+                    s.sendall(json.dumps(['signin', user, password]).encode())
+                    data = json.loads(recv_all(s))
                 if data[0] == 'r':
                     account_id = int(data[1])
                     MainUi().setupUi(main_window)
@@ -146,10 +166,11 @@ class Start(start_ui.Ui_MainWindow):
 
 
 class MainUi(main_ui.Ui_MainWindow):
-    def setupUi(self, MainWindow):
-        super().setupUi(MainWindow)
+    def setupUi(self, main_window):
+        super().setupUi(main_window)
         self.member_model = QStandardItemModel()  # 创建数据模型
         self.MemberView.setModel(self.member_model)  # 绑定到 QListView
+
     def signout(self, main_window):
         global account_id, ip, user, password, message_index
         account_id, ip, user, password, message_index = 0, '', '', '', 0
@@ -158,35 +179,52 @@ class MainUi(main_ui.Ui_MainWindow):
 
     def send_message(self):
         global s
-        s.sendall(json.dumps(['send_message', self.textEdit.toPlainText(), account_id]).encode())
+        with s_lock:
+            s.sendall(json.dumps(['send_message', self.textEdit.toPlainText(), account_id]).encode())
+            recv_all(s)
         self.textEdit.clear()
 
     def send_command(self):
         global s
-        s.sendall(json.dumps(['command', self.textEdit.toPlainText(), account_id]).encode())
+        with s_lock:
+            s.sendall(json.dumps(['command', self.textEdit.toPlainText(), account_id]).encode())
+            recv_all(s)
         self.textEdit.clear()
+
+    def is_at_update(self):
+        with s_lock:
+            s.sendall(json.dumps(['is_at', user]).encode())
+            data = recv_all(s)
+        data = json.loads(data)
+        if data:
+            QtWidgets.QMessageBox.information(self.centralwidget, "你被@了", "你被@了")
 
     def get_message(self):
         global s, message_index
-        s.sendall(json.dumps(['get_message']).encode())
-        data = s.recv(1024)
-        print(data)
+        with s_lock:
+            s.sendall(json.dumps(['get_message']).encode())
+            data = recv_all(s)
         data = json.loads(data)
         self.messageWidget.clear()
         self.messageWidget.addItems(data)
+        self.is_at_update()
 
     def update_member_view(self, users):
         self.member_model.clear()  # 通过模型清空内容
         for name, perm in users:
             item = QStandardItem()
-            item.setText(f"{name} [{'管理员' if perm >=1 else '用户'}]")
+            item.setText(f"{name} [{'管理员' if perm >= 1 else '用户'}]")
             self.member_model.appendRow(item)  # 通过模型添加项
 
     def get_online_users(self):
-        global s
-        s.sendall(json.dumps(['get_online_users']).encode())
-        data = json.loads(s.recv(4096))
-        self.update_member_view(data)
+        global s, member_list
+        with s_lock:
+            s.sendall(json.dumps(['get_online_users']).encode())
+            member_list = json.loads(recv_all(s))
+        try:
+            self.update_member_view(member_list)
+        except (TypeError, ValueError):
+            pass
 
     def check(self):
         if self.typeBox.currentIndex() == 0:
@@ -202,8 +240,9 @@ class MainUi(main_ui.Ui_MainWindow):
                 pass
             self.sendButton.clicked.connect(self.send_command)
 
-    def at_someone(self):
-        pass
+    def at_someone(self, index):
+        item = member_list[index.row()]
+        self.textEdit.insertPlainText(f"@({item[0]}) ")
 
     def retranslateUi(self, main_window: QtWidgets.QMainWindow):
         super().retranslateUi(main_window)

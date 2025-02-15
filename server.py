@@ -3,12 +3,15 @@ from socket import *
 from threading import Thread
 import json
 from threading import Lock
+import server_config
+import re
 
 messages = []
 messages_lock = Lock()
 
 online_users = {}  # 格式：{user_id: (name, permission_level)}
 online_users_lock = Lock()
+
 
 def recv_all(sock):
     data = b""
@@ -23,10 +26,11 @@ def recv_all(sock):
 
 
 def server(cli: socket):
-    global chats, online_users
+    global online_users
     spl = sqlite3.connect('user.sqlite')
     cur = spl.cursor()
     load = False
+    mentioned_users = []
     print('数据库加载完毕')
     while True:
         r = []
@@ -43,10 +47,23 @@ def server(cli: socket):
             if cur.execute(f"""select silence from user where id = {data[2]}""").fetchall()[0][0] == 1:
                 continue
             say = cur.execute(f"""select name from user where id = '{data[2]}'""").fetchall()
-            new_message = [say[0][0], data[1]]
+            new_message = say[0][0]+': '+data[1]
+            matches = re.findall(r'@\([^()]*\) ', data[1])
+            if matches:
+                for name in matches:
+                    name = name[2:-2]
+                    result = cur.execute(f"""select name from user where name = '{name}'""").fetchone()
+                    if result:
+                        mentioned_users.append(result[0])
             with messages_lock:
                 messages.append(new_message)
             print(messages)
+        elif data[0] == 'is_at':
+            if data[1] in mentioned_users:
+                mentioned_users.remove(data[1])
+                r = [True]
+            else:
+                r = []
         elif data[0] == 'command':
             if cur.execute(f"""select permission_level from user where id = '{data[2]}'""").fetchall()[0][0] >= 1:
                 d = data[1].split(' ')
@@ -80,9 +97,9 @@ def server(cli: socket):
                     r = ['r', str(
                         cur.execute(f"""select id from user where name = '{data[1]}'""").fetchall()[0][0])]
                 else:
-                    r = []
+                    r = ['password error']
             except IndexError:
-                r = []
+                r = ["don't have this user"]
         elif data[0] == '':
             continue
         if data[0] in ('signin', 'signon') and r[0] == 'r':
@@ -107,9 +124,9 @@ def server(cli: socket):
 
 if __name__ == '__main__':
     s = socket()
-    s.bind((gethostname(), 8080))
-    print(f'bind:{(gethostname(), 8080)}')
-    s.listen(114)
+    s.bind((gethostname(), server_config.POST))
+    print(f'bind:{(gethostname(), server_config.POST)}')
+    s.listen(server_config.MAX_USER_NUM)
     print('Server is running...')
     while True:
         client, addr = s.accept()
