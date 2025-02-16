@@ -11,8 +11,6 @@ import start_ui
 import client_config
 import json
 
-from socket import gethostname
-
 setdefaulttimeout(client_config.time_out)
 s = socket()
 s_lock = Lock()
@@ -55,7 +53,6 @@ class Signon(signon_ui.Ui_MainWindow):
             ip = gethostname()
         user = self.lineEdit_2.text()
         password = self.lineEdit_3.text()
-        print(ip, user, password, port)
         try:
             if not connect:
                 with s_lock:
@@ -101,7 +98,6 @@ class Signin(signin_ui.Ui_MainWindow):
                 ip = gethostname()
             user = self.lineEdit_2.text()
             password = self.lineEdit_3.text()
-            print(ip, user, password, port)
             try:
                 if not connect:
                     with s_lock:

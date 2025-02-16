@@ -12,6 +12,8 @@ messages_lock = Lock()
 online_users = {}  # 格式：{user_id: (name, permission_level)}
 online_users_lock = Lock()
 
+mentioned_users = []
+
 
 def recv_all(sock):
     data = b""
@@ -26,17 +28,16 @@ def recv_all(sock):
 
 
 def server(cli: socket):
-    global online_users
+    global online_users, mentioned_users
     spl = sqlite3.connect('user.sqlite')
     cur = spl.cursor()
     load = False
-    mentioned_users = []
     print('数据库加载完毕')
     while True:
         r = []
         try:
             data = json.loads(recv_all(cli).decode())
-        except ConnectionResetError:
+        except (ConnectionResetError, json.decoder.JSONDecodeError):
             break
         if data[0] == 'get_message':
             r = messages
@@ -47,14 +48,12 @@ def server(cli: socket):
             if cur.execute(f"""select silence from user where id = {data[2]}""").fetchall()[0][0] == 1:
                 continue
             say = cur.execute(f"""select name from user where id = '{data[2]}'""").fetchall()
-            new_message = say[0][0]+': '+data[1]
-            matches = re.findall(r'@\([^()]*\) ', data[1])
+            new_message = say[0][0] + ': ' + data[1]
+            matches = re.findall(r'@\(.+\) ', data[1])
             if matches:
                 for name in matches:
                     name = name[2:-2]
-                    result = cur.execute(f"""select name from user where name = '{name}'""").fetchone()
-                    if result:
-                        mentioned_users.append(result[0])
+                    mentioned_users.append(name)
             with messages_lock:
                 messages.append(new_message)
             print(messages)
