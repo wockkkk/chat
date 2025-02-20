@@ -97,6 +97,7 @@ if d[0] == 'r':
     account_id = int(d[1])
 else:
     print('用户未注册')
+    exit()
 while True:
     main_loop()
     time.sleep(1)

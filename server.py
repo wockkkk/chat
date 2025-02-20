@@ -49,6 +49,7 @@ def server(cli: socket):
                 continue
             say = cur.execute(f"""select name from user where id = '{data[2]}'""").fetchall()
             new_message = say[0][0] + ': ' + data[1]
+            new_message = ''.join([new_message[i:i+60]+'\n' for i in range(0, len(new_message), 60)])
             matches = re.findall(r'@\(.+\) ', data[1])
             if matches:
                 for name in matches:
