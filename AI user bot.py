@@ -28,7 +28,7 @@ messages = []
 def ai(messages):
     m_list = [sys_tip]
     for i in range(len(messages)):
-        x = {"role": "user", "content": messages[i]}
+        x = {"role": messages[i][0], "content": messages[i][1]}
         m_list.append(x)
         if i <= len(messages)-6:
             break
@@ -37,7 +37,7 @@ def ai(messages):
     if answer.get('choices'):
         answer = answer['choices'][0]['message']['content']
         answer = BeautifulSoup(markdown.markdown(answer), 'html.parser').get_text()
-    elif answer.get('code', 200) == 50505:
+    elif answer.get('code') == 50505:
         answer = '服务器繁忙，请稍后重试'
     elif type(answer) is str:
         answer = answer
@@ -78,9 +78,9 @@ def main_loop():
                 if match[0][2:-2] == user_name:
                     who, u_input = message.split(': ', 1)
                     print(who, u_input)
-                    messages.append(u_input)
+                    messages.append(('user',u_input))
                     return_word = f'@({who}) ' + ai(u_input)
-                    messages.append(return_word)
+                    messages.append(('',return_word))
                     print(return_word)
                     s.sendall(json.dumps(['send_message', return_word, account_id]).encode())
                     recv_all(s)
